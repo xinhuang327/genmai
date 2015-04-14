@@ -1259,9 +1259,19 @@ func (c *Condition) appendQueryByCondOrExpr(name string, order int, clause Claus
 
 func (c *Condition) build(numHolders int, inner bool) (queries []string, args []interface{}) {
 	sort.Sort(c.parts)
+	inOrderBy := false
 	for _, p := range c.parts {
-		if !(inner && p.clause == Where) {
-			queries = append(queries, p.clause.String())
+		setInOrderBy := false
+		if p.clause == OrderBy {
+			if !inOrderBy {
+				queries = append(queries, p.clause.String())
+				setInOrderBy = true
+			}
+		} else {
+			if !(inner && p.clause == Where) {
+				queries = append(queries, p.clause.String())
+			}
+			inOrderBy = false
 		}
 		switch e := p.expr.(type) {
 		case *expr:
@@ -1270,7 +1280,14 @@ func (c *Condition) build(numHolders int, inner bool) (queries []string, args []
 			args = append(args, e.value)
 			numHolders++
 		case *orderBy:
-			queries = append(queries, ColumnName(c.db.dialect, e.column.table, e.column.name), e.order.String())
+			prefix := ""
+			if inOrderBy {
+				prefix = ","
+			}
+			queries = append(queries, prefix+ColumnName(c.db.dialect, e.column.table, e.column.name), e.order.String())
+			if setInOrderBy {
+				inOrderBy = true
+			}
 		case *column:
 			col := ColumnName(c.db.dialect, e.table, e.name)
 			queries = append(queries, col)
