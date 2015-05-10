@@ -686,6 +686,9 @@ func (db *DB) classify(tableName string, args []interface{}) (column, from strin
 	for i := offset; i < len(args); i++ {
 		switch t := args[i].(type) {
 		case *Condition:
+			if t == nil {
+				continue // ignore nil condition.
+			}
 			t.tableName = tableName
 			conditions = append(conditions, t)
 		case string, []string:
