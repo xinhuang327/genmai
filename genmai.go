@@ -879,7 +879,8 @@ func (db *DB) tableName(t reflect.Type) string {
 	if table, ok := reflect.New(t).Interface().(TableNamer); ok {
 		return table.TableName()
 	}
-	return stringutil.ToSnakeCase(t.Name())
+	return t.Name()
+	// return stringutil.ToSnakeCase(t.Name())
 }
 
 // columnFromTag returns the column name.
@@ -888,7 +889,8 @@ func (db *DB) tableName(t reflect.Type) string {
 func (db *DB) columnFromTag(field reflect.StructField) string {
 	col := field.Tag.Get(dbColumnTag)
 	if col == "" {
-		return stringutil.ToSnakeCase(field.Name)
+		return field.Name
+		// return stringutil.ToSnakeCase(field.Name)
 	}
 	return col
 }
